@@ -4,4 +4,5 @@ Welcome to the walkthrough-bot-dotnet.
 
 ## Laboratories
 
-[Bot walkthrough using LUIS with Bot Builder V4 (.Net Core) with CI/CD pipelines in Azure DevOps](README-AzDevOps.md)
+[Bot Builder V4 walkthrough using LUIS with CI/CD pipelines in Azure DevOps](README-AzDevOps.md)
+[Bot Builder V4 walkthrough using LUIS with Kubernetes](README-Kubernetes.md)
