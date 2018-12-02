@@ -1,6 +1,6 @@
 ## Adding CI/CD pipelines to the Bot using Azure DevOps
 
-#### Creating Azure DevOps Account and Project
+#### Creating Azure DevOps account and project
 
 1. Go to https://dev.azure.com and get successfully sign-in with your Employee or Microsoft account.
 
@@ -23,7 +23,7 @@ Great! now you are able to see your new project called: WBD.
     <img src="http://rcervantes.me/images/walkthrough-bot-dotnet-azuredevops-dashboard.png" />
 </div>
 
-#### Cloning the Repo
+#### Cloning the repo
 
 First, we need to upload our bot code to the Azure DevOps Git repo. To perform this action click in <b>Repos->Files</b>, then click in the button <b>Generate Git credentials</b>.
 
@@ -95,7 +95,7 @@ To https://dev.azure.com/technical-poets/WBD/_git/WBD
     <img src="http://rcervantes.me/images/walkthrough-bot-dotnet-azuredevops-filesportal.png" />
 </div>
 
-#### Creating the CI Pipeline
+#### Creating the CI pipeline
 
 Now, it's time to configure the continuous integration pipeline. To perform this action click in <b>Pipelines->Builds</b> and then click `New pipeline`.
 
@@ -157,7 +157,7 @@ Steps:
     <img src="http://rcervantes.me/images/walkthrough-bot-dotnet-azuredevops-deployment.png" />
 </div>
 
-#### Creating the CD Pipeline
+#### Creating the CD pipeline
 
 Now, it's time to configure the continuous deployment pipeline. To perform this action click in <b>Pipelines->Releases</b> and then click `New pipeline`.
 

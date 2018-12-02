@@ -1,4 +1,4 @@
-## Creating the Kubernetes cluster and connecting the bot to the cluster
+## Creating the container and Kubernetes cluster for the bot
 
 #### Installing Azure CLI
 
@@ -12,7 +12,7 @@ Go to the Docker portal https://www.docker.com/get-started and install Docker in
 
 Docker will be used to build the images and push them to the ACR via CLI in the local machine, this is the preamble before start working with Kubernetes.
 
-#### Azure Container Registry Configuration
+#### Azure Container Registry configuration
 
 Once we have configured the Azure CLI, its time to open a terminal.
 
@@ -70,7 +70,7 @@ Password: REAL_PASSWORD
 Login Server: wbdacr.azurecr.io
 ```
 
-#### Building Docker in Bot Project
+#### Building Docker image in bot project
 
 1. Ensure you have Docker running in your local machine, you have the latest version of the GitHub repo and you have successfully accomplished the [bot  programming laboratory](README-BotBuilderV4.md).
 
@@ -381,3 +381,4 @@ latest: digest: sha256:eda6bb817045e00fa9a879eae328d151c7f25e69829fa400b968289c9
     <img src="http://rcervantes.me/images/walkthrough-bot-dotnet-acr.png" />
 </div>
 
+#### Creating Kubernetes cluster using Kubernetes Service

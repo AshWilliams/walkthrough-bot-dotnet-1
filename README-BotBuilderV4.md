@@ -4,7 +4,7 @@
 
 `git clone https://github.com/rcervantes/walkthrough-bot-dotnet.git`
 
-#### Using Visual Studio 2017 (Any Version)
+#### Using Visual Studio 2017 (any version)
 
 1. Based on the webinar explanation go to `source\1. start\` folder and open the WBD.sln file in Visual Studio 2017.
 
@@ -12,13 +12,13 @@
 
 3. Build the WBD project (the project should be successfully compiled but is not ready to be executed).
 
-#### Using Visual Studio Code (Any Version)
+#### Using Visual Studio Code (any version)
 
 1. Open Visual Studio Code and open the following folder `source\1. start\WBD\`.
 
 2. Open a terminal pointing the folder `source\1. start\WBD\` folder and run the following command: <b>dotnet build</b>, wait until nuget packages are being reinstalled and the project finishes the build process (the project should be successfully compiled but is not ready to be executed).
 
-#### Translator Text Configuration
+#### Translator text configuration
 
 Go to https://portal.azure.com/ and get successfully sign-in with your Employee or Microsoft account.
 
@@ -33,7 +33,7 @@ Steps:
 
 2. Once the resource has been deployed go to the resource and click in <b>Resource Management->Keys</b> and take note of the `Key 1` in a notepad (we are going to use this information later to configure the bot).
 
-#### LUIS Configuration
+#### LUIS configuration
 
 1. Go to https://www.luis.ai/ and get successfully sign-in with your Employee or Microsoft account.
 
@@ -47,7 +47,7 @@ Steps:
 
 6. Everytime you add, remove or update utterances a new train and publish process is required to train and expose the latest version.
 
-#### Bot Configuration
+#### Bot configuration
 
 Return to Visual Studio 2017 or Visual Studio Code open and update the `appsettings.json` file in the root of the bot project.
 
@@ -67,7 +67,7 @@ Your appsettings.json file should look like this
 
 For local development and debugging MicrosoftAppId and MicrosoftAppPassword can be empty, these settings are used in Azure deployment.
 
-#### Getting Dirty (Let's Code!)
+#### Getting dirty (let's code!)
 
 1. In the Startup.cs file replace line 39 with:
 
@@ -218,7 +218,7 @@ await accessors.UserState.SaveChangesAsync(step.Context, false, cancellationToke
 
 <b>Note:</b> This code provides the routine to save the preferences before end the LanguageDialog and return to MainDialog.
 
-#### Running the Bot
+#### Running the bot
 
 Congratulations! if you are here is because your bot is almost done, you only need to verify the configuration of the ports, run the bot app and open the WBD.bot file from the emulator.
 
@@ -242,6 +242,6 @@ In the Bot Framework Emulator (V4 Preview) you will see an Endpoint called: Loca
 
 If you have issues with your emulator, verify you have unchecked the option: Bypass ngrok for local address located in emulator settings. 
 
-#### Completed Code
+#### Master code (complete solution)
 
 In case you want to review your code with the complete solution you can follow the previous configuration steps using the complete solution located in: `source\2. completed\WBD\`.
