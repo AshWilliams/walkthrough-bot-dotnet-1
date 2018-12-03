@@ -1,4 +1,4 @@
-## Creating the container and Kubernetes cluster for the bot
+## Creating the Docker container and Kubernetes cluster for the bot
 
 #### Installing Azure CLI
 
@@ -16,43 +16,43 @@ Docker will be used to build the images and push them to the ACR via CLI in the 
 
 Once we have configured the Azure CLI, its time to open a terminal.
 
-Let's login to Azure.
+1. Let's login to Azure.
 
 ```bash
 az login
 ```
 
-Display the accounts associated to your subscription.
+2. Display the accounts associated to your subscription.
 
 ```bash
 az account show
 ```
 
-Select the account you want to use.
+3. Select the account you want to use.
 
 ```bash
 az account set --subscription 
 ```
 
-Let's create the resource group that we are going to use to allocate the ACR.
+4. Let's create the resource group that we are going to use to allocate the ACR.
 
 ```bash
 az group create --name wbd-acr --location westus
 ```
 
-Let's create the Azure Container Registry (ACR).
+5. Let's create the Azure Container Registry (ACR).
 
 ```bash
 az acr create --resource-group wbd-acr --name wbdacr --sku Basic --admin-enabled true
 ```
 
-Get the credentials to access to the ACR.
+6. Get the credentials to access to the ACR.
 
 ```bash
 az acr credential show --resource-group wbd-acr --name wbdacr --output yaml
 ```
 
-You should get something like this:
+* You should get something like this:
 
 ```yaml
 - name: password
@@ -62,7 +62,7 @@ You should get something like this:
 username: wbdacr
 ```
 
-Take note of the following, you will use information later.
+7. Take note of the following, you will use information later.
 
 ```bash
 Username: wbdacr
@@ -108,7 +108,7 @@ docker image build . --tag "latest"
 
 Wait until nuget packages are being reinstalled and the project finishes the build process (the project should be successfully compiled but is not ready to be executed).
 
-You should be able to see something like this:
+* You should be able to see something like this:
 
 ```bash
 Sending build context to Docker daemon  2.576MB
@@ -362,7 +362,7 @@ docker tag 8daa1a9317c3 wbdacr.azurecr.io/wbd
 docker push wbdacr.azurecr.io/wbd
 ```
 
-You should be able to see something like this:
+* You should be able to see something like this:
 
 ```bash
 The push refers to repository [wbdacr.azurecr.io/wbd]
@@ -382,3 +382,194 @@ latest: digest: sha256:eda6bb817045e00fa9a879eae328d151c7f25e69829fa400b968289c9
 </div>
 
 #### Creating Kubernetes cluster using Kubernetes Service
+
+1. Let's create the resource group that we are going to use to allocate the Kubernetes cluster.
+
+```bash
+az group create --name akswbd --location centralus
+```
+
+Note: There's a reason to use Central US since there is a VM size special for this scenario: B2s.
+
+2. Let's create the Azure Container Registry (ACR).
+
+```bash
+az aks create --name akswbddev --resource-group akswbd --node-count 3 --disable-rbac --generate-ssh-keys --location centralus --node-vm-size Standard_B2s
+```
+
+It will take a couple of minutes to create a new cluster called `akswbddev` in the `akswbd` resource group with `three nodes` of size `Standard_B2s` in the region `central us` with the `RBAC disabled`.
+
+* You should be able to see something like this:
+
+```bash
+{
+  "aadProfile": null,
+  "addonProfiles": null,
+  "agentPoolProfiles": [
+    {
+      "count": 3,
+      "maxPods": 110,
+      "name": "nodepool1",
+      "osDiskSizeGb": 30,
+      "osType": "Linux",
+      "storageProfile": "ManagedDisks",
+      "vmSize": "Standard_B2s",
+      "vnetSubnetId": null
+    }
+  ],
+  "dnsPrefix": "akswbddev-akswbd-cf08ad",
+  "enableRbac": false,
+  "fqdn": "akswbddev-akswbd-cf08ad-d2513ac3.hcp.centralus.azmk8s.io",
+  "id": "/subscriptions/cf08ad95-25cc-462c-9009-82d1c570f616/resourcegroups/akswbd/providers/Microsoft.ContainerService/managedClusters/akswbddev",
+  "kubernetesVersion": "1.9.11",
+  "linuxProfile": {
+    "adminUsername": "azureuser",
+    "ssh": {
+      "publicKeys": [
+        {
+          "keyData": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDd1+vqO/ajdHNwMMhqp6UEkmR9fu8oGrTVNudLYxoXG4Xt4xvFxew5Rm3FbtWh/FXs8qO8vCbcSBNeSmQGzaSY1/RvMVH+IIeMtF5xo10O7aBqjpcVuO46vo3a+BPOXVuuxZ7V1sH6kJuPf79kvq26h+kZT1z2avV7yrUlbOGnOh/45cKgOwKkg2uAFB5yLOsIfbK39uYI4Po5squvAW5RZGFQz9e3Qp/oEeXYj/JflWz/8sO7ufjKSbL+RaJF6S8KcvzbxdUXZ0OTTicivOsQ7/embgcDj6PtL0AOebhNZsQnRqF5SdDJ4bsi16SdYJBM0kBRboSVsM4Fze6N/4Dx"
+        }
+      ]
+    }
+  },
+  "location": "centralus",
+  "name": "akswbddev",
+  "networkProfile": {
+    "dnsServiceIp": "10.0.0.10",
+    "dockerBridgeCidr": "172.17.0.1/16",
+    "networkPlugin": "kubenet",
+    "networkPolicy": null,
+    "podCidr": "10.244.0.0/16",
+    "serviceCidr": "10.0.0.0/16"
+  },
+  "nodeResourceGroup": "MC_akswbd_akswbddev_centralus",
+  "provisioningState": "Succeeded",
+  "resourceGroup": "akswbd",
+  "servicePrincipalProfile": {
+    "clientId": "84d52ee3-43c5-4d20-9cf9-5862edc3e704",
+    "secret": null
+  },
+  "tags": null,
+  "type": "Microsoft.ContainerService/ManagedClusters"
+}
+```
+
+3. Great, at this moment your cluster is ready to be used.
+
+4. It's time to download and install the AKS CLI, open a terminal and execute the following command.
+
+```bash
+az aks install-cli
+```
+
+5. Let's get the credentials
+
+```bash
+az aks get-credentials --resource-group akswbd --name akswbddev
+```
+
+6. Let's give permission to your dashboard using the `az aks cli`.
+
+```bash
+kubectl create clusterrolebinding kubernetes-dashboard -n kube-system --clusterrole=cluster-admin --serviceaccount=kube-system:kubernetes-dashboard
+```
+
+7. You can now open a new terminal and browse in the Kubernetes Portal.
+
+```bash
+az aks browse --resource-group akswbd --name akswbddev
+```
+
+<div style="text-align:center">
+    <img src="http://rcervantes.me/images/walkthrough-bot-dotnet-kubernetesportal.png" />
+</div>
+
+In this portal you can configure and explore the health of your nodes, deployments, etc.
+
+8. It's time to create the Docker configuration secret in Kubernetes with the name: `acr-auth`, this secret will contain all the information required to pull the images from the ACR.
+
+```bash
+kubectl create secret docker-registry acr-auth --docker-server wbdacr.azurecr.io --docker-username wbdacr --docker-password REAL_PASSWORD --docker-email YOURDOCKER@EMAIL.com
+```
+
+9. Now, create a temporal folder `akswbddev` and create a new json file: `appsettings.secrets.json`.
+
+* This file must contain the following:
+
+```json
+{
+    "MicrosoftAppId": "MICROSOFT_BOT_APP_ID",
+    "MicrosoftAppPassword": "MICROSOFT_BOT_APP_PASSWORD",
+    "TranslatorTextAPIKey": "AZURE_TRANSLATOR_KEY",
+    "BotVersion": "BOT_VERSION",
+    "LuisName01": "LUIS_NAME (e.g. Reminders)",
+    "LuisAppId01": "LUIS_APPLICATION_ID",
+    "LuisAuthoringKey01": "LUIS_AUTHORING_KEY",
+    "LuisEndpoint01": "LUIS_ENDPOINT"
+}
+```
+
+MicrosoftAppId and MicrosoftAppPassword are required and can be obtain from the Web App Bot, if you don't know how to create a Web App Bot review the laboratory: [Adding CI/CD pipelines to the Bot using Azure DevOps](README-AzDevOps.md).
+
+10. Open a terminal in the folder `akswbddev` and create the secret.
+
+```bash
+kubectl create secret generic secret-appsettings --from-file=appsettings.secrets.json
+```
+
+11. In the same temporal folder `akswbddev` create a new json file: `deployment.yaml`.
+
+* This file must contain the following:
+
+```yaml
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: walkthrough-bot-dotnet
+spec:
+  replicas: 5
+  template:
+    metadata:
+      labels:
+        app: walkthrough-bot-dotnet
+    spec:
+      containers:
+      - name: walkthrough-bot-dotnet
+        image: wbdacr.azurecr.io/wbd:latest
+        ports:
+        - containerPort: 80
+        env:
+        - name: "ASPNETCORE_ENVIRONMENT"
+          value: "Kubernetes"
+        volumeMounts:
+        - name: secrets
+          mountPath: /app/secrets
+          readOnly: true
+      imagePullSecrets:
+        - name: acr-auth
+      volumes:
+      - name: secrets
+        secret:
+          secretName: secret-appsettings
+```
+
+This file is responsible to create the deployment, you can see with detail how many replicas (instances) will have the deployment, the secret used for pulling the image and the secret for appsettings.
+
+12. Let's execute the yaml definition.
+
+```bash
+kubectl apply -f deployment.yaml
+```
+
+If you have open your Kubernetes portal you can see in Pods tab, the instances running in the cluster.
+
+<div style="text-align:center">
+    <img src="http://rcervantes.me/images/walkthrough-bot-dotnet-kubernetes-pods.png" />
+</div>
+
+13. Awesome!! You have deployed your bot image in the cluster, now instances are correctly configured, but there is a little issue, this hasn't been exposed to internet, we only have a bunch of isolated instances running in the cluster.
+
+Note: Remember the Web App Bot is pointing to the HTTPS endpoint exposed by the App Service, our goal is replicate the HTTPS endpoint with a external and secure load balancer in Kubernetes to allow Web App Bot reach the logic of the bot.
+
+
+
