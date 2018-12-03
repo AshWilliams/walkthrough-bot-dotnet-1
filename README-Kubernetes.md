@@ -391,7 +391,7 @@ az group create --name akswbd --location centralus
 
 Note: There's a reason to use Central US since there is a VM size special for this scenario: B2s.
 
-2. Let's create the Azure Container Registry (ACR).
+2. Let's create the Azure Kubernetes Service (AKS).
 
 ```bash
 az aks create --name akswbddev --resource-group akswbd --node-count 3 --disable-rbac --generate-ssh-keys --location centralus --node-vm-size Standard_B2s
