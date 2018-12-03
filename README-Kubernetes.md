@@ -569,7 +569,229 @@ If you have open your Kubernetes portal you can see in Pods tab, the instances r
 
 13. Awesome!! You have deployed your bot image in the cluster, now instances are correctly configured, but there is a little issue, this hasn't been exposed to internet, we only have a bunch of isolated instances running in the cluster.
 
-Note: Remember the Web App Bot is pointing to the HTTPS endpoint exposed by the App Service, our goal is replicate the HTTPS endpoint with a external and secure load balancer in Kubernetes to allow Web App Bot reach the logic of the bot.
+<b>Note:</b> Remember, the Azure Web App Bot is pointing to the HTTPS endpoint exposed by the App Service, our goal is replicate the HTTPS endpoint with a external and secure load balancer in Kubernetes to allow Web App Bot reach the logic of the bot.
 
+14. It's time to secure the http binding. To perform this task we can create an HTTPS ingress controller.
 
+You need to install HELM: 
 
+- For Windows: Download & Install, then configure environment variables for the helm folder path.
+- For mac: brew install kubernetes-helm
+
+If you have doubts, take a look here: https://docs.helm.sh/using_helm/#installing-helm.
+
+15. Open the terminal and initialize Helm and Tiller.
+
+```bash
+helm init
+```
+
+16. Let's install the nginx-ingress.
+
+```bash
+ helm install stable/nginx-ingress --namespace kube-system --set controller.replicaCount=2 --set rbac.create=false
+```
+
+17. You can see the ingress controllers instances.
+
+```bash
+kubectl get service -l app=nginx-ingress --namespace kube-system
+```
+
+If you see EXTERNAL-IP with status pending wait one or two minutes until it receives the assigned public IP.
+
+```bash
+NAME                                    TYPE           CLUSTER-IP     EXTERNAL-IP   PORT(S)                      AGE
+fun-hog-nginx-ingress-controller        LoadBalancer   10.0.45.63     <pending>     80:32677/TCP,443:32295/TCP   11s
+fun-hog-nginx-ingress-default-backend   ClusterIP      10.0.183.229   <none>        80/TCP                       11s
+```
+
+<b>Note:</b> It's important to keep save the external ip address, we are going to use it in the next step.
+
+18. In the same temporal folder `akswbddev` create a new bash file: `deployment.sh`, and replace with the external-ip address assigned to the nginx-ingress controller.
+
+```bash
+#!/bin/bash
+
+# Public IP address of your ingress controller
+IP="INGRESS EXTERNAL IP ADDRESS"
+
+# Name to associate with public IP address
+DNSNAME="wbd-aks-ingress"
+
+# Get the resource-id of the public ip
+PUBLICIPID=$(az network public-ip list --query "[?ipAddress!=null]|[?contains(ipAddress, '$IP')].[id]" --output tsv)
+
+# Update public ip address with DNS name
+az network public-ip update --ids $PUBLICIPID --dns-name $DNSNAME
+```
+
+19. Then execute the bash file.
+
+```bash
+sh ./deployment.sh
+```
+* You should be able to see something like this:
+
+```bash
+{
+  "dnsSettings": {
+    "domainNameLabel": "wbd-aks-ingress",
+    "fqdn": "wbd-aks-ingress.centralus.cloudapp.azure.com",
+    "reverseFqdn": null
+  },
+  "etag": "W/\"8629ef7e-f798-480d-a9e1-72f956389097\"",
+  "id": "/subscriptions/cf08ad95-25cc-462c-9009-82d1c570f616/resourceGroups/MC_akswbd_akswbddev_centralus/providers/Microsoft.Network/publicIPAddresses/kubernetes-a60fc1e8cf69811e8b71c4675dfeb33b",
+  "idleTimeoutInMinutes": 4,
+  "ipAddress": "104.43.251.18",
+  "ipConfiguration": {
+    "etag": null,
+    "id": "/subscriptions/cf08ad95-25cc-462c-9009-82d1c570f616/resourceGroups/MC_akswbd_akswbddev_centralus/providers/Microsoft.Network/loadBalancers/kubernetes/frontendIPConfigurations/a60fc1e8cf69811e8b71c4675dfeb33b",
+    "name": null,
+    "privateIpAddress": null,
+    "privateIpAllocationMethod": null,
+    "provisioningState": null,
+    "publicIpAddress": null,
+    "resourceGroup": "MC_akswbd_akswbddev_centralus",
+    "subnet": null
+  },
+  "ipTags": [],
+  "location": "centralus",
+  "name": "kubernetes-a60fc1e8cf69811e8b71c4675dfeb33b",
+  "provisioningState": "Succeeded",
+  "publicIpAddressVersion": "IPv4",
+  "publicIpAllocationMethod": "Static",
+  "publicIpPrefix": null,
+  "resourceGroup": "MC_akswbd_akswbddev_centralus",
+  "resourceGuid": "7fc6f0e9-8830-4aad-a3e6-8919cf10781d",
+  "sku": {
+    "name": "Basic",
+    "tier": "Regional"
+  },
+  "tags": {
+    "service": "kube-system/fun-hog-nginx-ingress-controller"
+  },
+  "type": "Microsoft.Network/publicIPAddresses",
+  "zones": null
+}
+```
+
+20. Let's install the certificate manager using helm.
+
+```bash
+helm install stable/cert-manager --namespace kube-system --set ingressShim.defaultIssuerName=letsencrypt-prod --set ingressShim.defaultIssuerKind=ClusterIssuer --set rbac.create=false --set serviceAccount.create=false
+```
+
+21. In the same temporal folder `akswbddev` create the certificate cluster issuer yaml file: `cluster-issuer.yaml`.
+
+```yaml
+apiVersion: certmanager.k8s.io/v1alpha1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-prod
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: user@contoso.com
+    privateKeySecretRef:
+      name: letsencrypt-prod
+    http01: {}
+```
+
+22. Let's execute the yaml definition.
+
+```bash
+kubectl apply -f cluster-issuer.yaml
+```
+
+23. In the same temporal folder `akswbddev` create the certificate yaml file: `certificate.yaml`.
+
+<b>Note:</b> In a real scenario we should be able to handle multiples certificates for each exposed application/service we want put on internet, this yaml file has the wbd preffix and suffix to avoid collisions with other exposed apps in the same Kubernetes cluster.
+
+```yaml
+apiVersion: certmanager.k8s.io/v1alpha1
+kind: Certificate
+metadata:
+  name: tls-secret-wbd
+spec:
+  secretName: tls-secret-wbd
+  dnsNames:
+  - wbd-aks-ingress.centralus.cloudapp.azure.com
+  acme:
+    config:
+    - http01:
+        ingressClass: nginx
+      domains:
+      - wbd-aks-ingress.centralus.cloudapp.azure.com
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+```
+
+24. Let's execute the yaml definition.
+
+```bash
+kubectl apply -f certificate.yaml
+```
+
+25. Now let's expose the deployment to internet.
+
+```bash
+kubectl expose deployment walkthrough-bot-dotnet --name=walkthrough-bot-dotnet
+```
+
+26. In the same temporal folder `akswbddev` create the ingress route yaml file: `ingress-route.yaml`.
+
+```yaml
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: walkthrough-bot-dotnet-ingress
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    certmanager.k8s.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  tls:
+  - hosts:
+    - wbd-aks-ingress.centralus.cloudapp.azure.com
+    secretName: tls-secret-wbd
+  rules:
+  - host: wbd-aks-ingress.centralus.cloudapp.azure.com
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: walkthrough-bot-dotnet
+          servicePort: 80
+```
+
+27. Let's execute the yaml definition.
+
+```bash
+kubectl apply -f ingress-route.yaml
+```
+
+28. If you do the previous steps correctly you will be able to access with a valid HTTPS certificate in your browser: https://wbd-aks-ingress.centralus.cloudapp.azure.com.
+
+<div style="text-align:center">
+    <img src="http://rcervantes.me/images/walkthrough-bot-dotnet-kubernetes-https.png" />
+</div>
+
+<b>Note:</b> In case something goes wrong you can use the following commands to delete your Kubernetes resources, verify them and try again.
+
+- kubectl delete -f certificate.yaml
+- kubectl delete -f cluster-issuer.yaml
+- kubectl delete -f ingress-route.yaml
+
+29. Now it's simple, you can go to your Web App Bot Settings replace the App Service url with the Kubernetes exposed service https url and save the changes.
+
+<div style="text-align:center">
+    <img src="http://rcervantes.me/images/walkthrough-bot-dotnet-kubernetes-webappbot.png" />
+</div>
+
+30. Bang!! You are now running the Bot in a cluster of 5 instances in Kubernetes.
+
+<div style="text-align:center">
+    <img src="http://rcervantes.me/images/walkthrough-bot-dotnet-kubernetes-webappbot2.png" />
+</div>
