@@ -25,4 +25,4 @@ Welcome to the walkthrough-bot-dotnet (WBD) project.
 
 1) [Programming the Bot](README-BotBuilderV4.md)
 2) [Adding CI/CD pipelines to the Bot using Azure DevOps](README-AzDevOps.md)
-3) [Creating a Kubernetes cluster and connecting the bot to the cluster](README-Kubernetes.md)
+3) [Creating the Docker container and Kubernetes cluster for the bot](README-Kubernetes.md)
